@@ -13,15 +13,6 @@ export default function OrderCard({ order, daysUntilDelivery, onDragStart }: Ord
   const isUrgent = daysUntilDelivery <= 3;
   const isOverdue = daysUntilDelivery < 0;
 
-  // Debug: Log image URLs
-  if (order.fabricImage || order.clientReferenceImage) {
-    console.log('OrderCard - Image URLs:', {
-      orderId: order.id,
-      fabricImage: order.fabricImage,
-      clientReferenceImage: order.clientReferenceImage,
-    });
-  }
-
   return (
     <div
       draggable

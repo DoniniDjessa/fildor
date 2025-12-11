@@ -14,15 +14,8 @@ export async function checkUserRoles() {
     .order('email');
 
   if (error) {
-    console.error('Error fetching users:', error);
     return { error: error.message, users: null };
   }
-
-  console.log('=== User Roles in ct-users table ===');
-  users?.forEach((user) => {
-    console.log(`User: ${user.email} (${user.name}) - Role: "${user.role}" (type: ${typeof user.role})`);
-  });
-  console.log('===================================');
 
   return { error: null, users };
 }
@@ -51,15 +44,6 @@ export async function checkCurrentUserRole() {
   if (profileError) {
     return { error: profileError.message, user, profile: null };
   }
-
-  console.log('=== Current User Role Check ===');
-  console.log('User ID:', user.id);
-  console.log('User Email:', user.email);
-  console.log('Profile:', profile);
-  console.log('Role:', profile?.role);
-  console.log('Role Type:', typeof profile?.role);
-  console.log('Is Admin Check:', profile?.role === 'superAdmin' || profile?.role === 'admin');
-  console.log('==============================');
 
   return {
     error: null,

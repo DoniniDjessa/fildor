@@ -242,7 +242,6 @@ export default function CreateOrderWizard({ isOpen, onClose, onSuccess, isAdmin:
           formData.append('type', 'fabric');
           formData.append('orderId', order.id);
           fabricImageUrl = await uploadOrderImage(formData);
-          console.log('Fabric image uploaded:', fabricImageUrl);
         } catch (error) {
           console.error('Error uploading fabric image:', error);
         }
@@ -255,7 +254,6 @@ export default function CreateOrderWizard({ isOpen, onClose, onSuccess, isAdmin:
           formData.append('type', 'reference');
           formData.append('orderId', order.id);
           clientReferenceImageUrl = await uploadOrderImage(formData);
-          console.log('Client reference image uploaded:', clientReferenceImageUrl);
         } catch (error) {
           console.error('Error uploading reference image:', error);
         }
@@ -263,14 +261,9 @@ export default function CreateOrderWizard({ isOpen, onClose, onSuccess, isAdmin:
 
       // Update order with image URLs if they were uploaded
       if (fabricImageUrl || clientReferenceImageUrl) {
-        const updatedOrder = await updateOrder(order.id, {
+        await updateOrder(order.id, {
           fabric_image_url: fabricImageUrl,
           client_reference_image_url: clientReferenceImageUrl,
-        });
-        console.log('Order updated with images:', {
-          orderId: order.id,
-          fabricImageUrl: updatedOrder.fabric_image_url,
-          clientReferenceImageUrl: updatedOrder.client_reference_image_url,
         });
       }
 

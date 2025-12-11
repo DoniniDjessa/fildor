@@ -6,6 +6,85 @@ import { deleteImage, extractStoragePath } from '@/lib/storage/images';
 
 export type OrderStatus = 'pending' | 'cutting' | 'sewing' | 'fitting' | 'completed';
 
+/**
+ * Helper function to enrich orders with client and model data
+ */
+async function enrichOrdersWithRelations(orders: any[]) {
+  console.log('[enrichOrdersWithRelations] Called with', orders?.length || 0, 'orders');
+  
+  if (!orders || orders.length === 0) {
+    console.log('[enrichOrdersWithRelations] No orders to enrich, returning empty array');
+    return [];
+  }
+
+  const supabase = await createServerClient();
+
+  // Get unique client and model IDs
+  const clientIds = [...new Set(orders.map((o) => o.client_id).filter(Boolean))];
+  const modelIds = [...new Set(orders.map((o) => o.model_id).filter(Boolean))];
+
+  console.log('[enrichOrdersWithRelations] Client IDs:', clientIds.length, 'Model IDs:', modelIds.length);
+
+  // Fetch clients and models separately
+  console.log('[enrichOrdersWithRelations] Fetching clients and models...');
+  const [clientsResult, modelsResult] = await Promise.all([
+    clientIds.length > 0
+      ? supabase
+          .from('ct-clients')
+          .select('id, noms, surnom')
+          .in('id', clientIds)
+      : { data: [], error: null },
+    modelIds.length > 0
+      ? supabase
+          .from('ct-models')
+          .select('id, name, category, base_price, image_url')
+          .in('id', modelIds)
+      : { data: [], error: null },
+  ]);
+
+  if (clientsResult.error) {
+    console.error('[enrichOrdersWithRelations] Error fetching clients:', clientsResult.error);
+  } else {
+    console.log('[enrichOrdersWithRelations] Fetched', clientsResult.data?.length || 0, 'clients');
+  }
+
+  if (modelsResult.error) {
+    console.error('[enrichOrdersWithRelations] Error fetching models:', modelsResult.error);
+  } else {
+    console.log('[enrichOrdersWithRelations] Fetched', modelsResult.data?.length || 0, 'models');
+  }
+
+  // Create maps for quick lookup
+  const clientsMap = new Map(
+    (clientsResult.data || []).map((c: any) => [c.id, { id: c.id, noms: c.noms, surnom: c.surnom }])
+  );
+  const modelsMap = new Map(
+    (modelsResult.data || []).map((m: any) => [
+      m.id,
+      { id: m.id, name: m.name, category: m.category, base_price: m.base_price, image_url: m.image_url },
+    ])
+  );
+
+  console.log('[enrichOrdersWithRelations] Maps created - Clients:', clientsMap.size, 'Models:', modelsMap.size);
+
+  // Combine orders with client and model data
+  const enriched = orders.map((order: any) => ({
+    ...order,
+    client: order.client_id ? clientsMap.get(order.client_id) || null : null,
+    model: order.model_id ? modelsMap.get(order.model_id) || null : null,
+  }));
+
+  console.log('[enrichOrdersWithRelations] Enrichment complete. Orders with client:', enriched.filter(o => o.client).length, 'Orders with model:', enriched.filter(o => o.model).length);
+  console.log('[enrichOrdersWithRelations] Sample enriched order:', enriched[0] ? {
+    id: enriched[0].id,
+    status: enriched[0].status,
+    hasClient: !!enriched[0].client,
+    hasModel: !!enriched[0].model,
+  } : 'none');
+
+  return enriched;
+}
+
 export interface OrderFormData {
   client_id: string;
   model_id: string;
@@ -55,48 +134,78 @@ export interface Order {
 export async function getOrders() {
   const supabase = await createServerClient();
 
-  const { data, error } = await supabase
+  // Fetch orders without relations (like the SQL query that works)
+  const { data: ordersData, error: ordersError } = await supabase
     .from('ct-orders')
-    .select(`
-      *,
-      client:ct-clients(id, noms, surnom),
-      model:ct-models(id, name, category, base_price, image_url)
-    `)
+    .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
+  if (ordersError) {
+    console.error('Error fetching orders:', ordersError);
+    throw new Error(ordersError.message);
   }
 
-  return (data || []) as unknown as Order[];
+  if (!ordersData || ordersData.length === 0) {
+    return [];
+  }
+
+  // Enrich orders with client and model data
+  const enrichedOrders = await enrichOrdersWithRelations(ordersData);
+
+  console.log('Commandes:', enrichedOrders);
+  return enrichedOrders as unknown as Order[];
 }
 
 export async function getOrdersByStatus(status: OrderStatus) {
+  console.log(`[getOrdersByStatus] Called with status: ${status}`);
   const supabase = await createServerClient();
 
-  let query = supabase
-    .from('ct-orders')
-    .select(`
-      *,
-      client:ct-clients(id, noms, surnom),
-      model:ct-models(id, name, category, base_price, image_url)
-    `)
-    .eq('status', status);
+  // Build query without relations first
+  console.log(`[getOrdersByStatus(${status})] Building query...`);
+  let query = supabase.from('ct-orders').select('*').eq('status', status);
 
   // For completed orders, only show those completed less than 4 days ago
   if (status === 'completed') {
     const fourDaysAgo = new Date();
     fourDaysAgo.setDate(fourDaysAgo.getDate() - 4);
     query = query.gte('completed_at', fourDaysAgo.toISOString());
+    console.log(`[getOrdersByStatus(${status})] Filtering completed orders after:`, fourDaysAgo.toISOString());
   }
 
-  const { data, error } = await query.order('created_at', { ascending: false });
+  console.log(`[getOrdersByStatus(${status})] Executing query...`);
+  const { data: ordersData, error: ordersError } = await query.order('created_at', { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
+  if (ordersError) {
+    console.error(`[getOrdersByStatus(${status})] Error:`, {
+      code: ordersError.code,
+      message: ordersError.message,
+      details: ordersError.details,
+      hint: ordersError.hint,
+    });
+    throw new Error(ordersError.message);
   }
 
-  return (data || []) as unknown as Order[];
+  console.log(`[getOrdersByStatus(${status})] Raw orders fetched:`, ordersData?.length || 0);
+  if (ordersData && ordersData.length > 0) {
+    console.log(`[getOrdersByStatus(${status})] Sample order:`, {
+      id: ordersData[0].id,
+      status: ordersData[0].status,
+      client_id: ordersData[0].client_id,
+      model_id: ordersData[0].model_id,
+    });
+  }
+
+  if (!ordersData || ordersData.length === 0) {
+    console.log(`[getOrdersByStatus(${status})] No orders found, returning empty array`);
+    return [];
+  }
+
+  // Enrich orders with client and model data
+  console.log(`[getOrdersByStatus(${status})] Enriching orders...`);
+  const enrichedOrders = await enrichOrdersWithRelations(ordersData);
+  console.log(`[getOrdersByStatus(${status})] Returning ${enrichedOrders.length} enriched orders`);
+
+  return enrichedOrders as unknown as Order[];
 }
 
 export async function createOrder(data: OrderFormData & { id?: string; fabric_image_url?: string; client_reference_image_url?: string }) {
@@ -116,19 +225,19 @@ export async function createOrder(data: OrderFormData & { id?: string; fabric_im
         updated_by: user?.id,
       })
       .eq('id', data.id)
-      .select(`
-        *,
-        client:ct-clients(id, noms, surnom),
-        model:ct-models(id, name, category, base_price, image_url)
-      `)
+      .select('*')
       .single();
 
     if (error) {
       throw new Error(error.message);
     }
 
+    // Enrich with relations
+    const enrichedOrders = await enrichOrdersWithRelations([order]);
+    const enrichedOrder = enrichedOrders[0];
+
     revalidatePath('/commandes');
-    return order as unknown as Order;
+    return enrichedOrder as unknown as Order;
   }
 
   // Otherwise, create a new order
@@ -150,19 +259,19 @@ export async function createOrder(data: OrderFormData & { id?: string; fabric_im
       created_by: user?.id,
       updated_by: user?.id,
     })
-    .select(`
-      *,
-      client:ct-clients(id, noms, surnom),
-      model:ct-models(id, name, category, base_price, image_url)
-    `)
+    .select('*')
     .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
+  // Enrich with relations
+  const enrichedOrders = await enrichOrdersWithRelations([order]);
+  const enrichedOrder = enrichedOrders[0];
+
   revalidatePath('/commandes');
-  return order as unknown as Order;
+  return enrichedOrder as unknown as Order;
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {
@@ -182,23 +291,23 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
     updateData.completed_at = new Date().toISOString();
   }
 
-  const { data, error } = await supabase
+  const { data: orderData, error } = await supabase
     .from('ct-orders')
     .update(updateData)
     .eq('id', id)
-    .select(`
-      *,
-      client:ct-clients(id, noms, surnom),
-      model:ct-models(id, name, category, base_price, image_url)
-    `)
+    .select('*')
     .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
+  // Enrich with relations
+  const enrichedOrders = await enrichOrdersWithRelations([orderData]);
+  const enrichedOrder = enrichedOrders[0];
+
   revalidatePath('/commandes');
-  return data as unknown as Order;
+  return enrichedOrder as unknown as Order;
 }
 
 export async function updateOrder(id: string, data: Partial<OrderFormData>) {
@@ -208,26 +317,26 @@ export async function updateOrder(id: string, data: Partial<OrderFormData>) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: order, error } = await supabase
+  const { data: orderData, error } = await supabase
     .from('ct-orders')
     .update({
       ...data,
       updated_by: user?.id,
     })
     .eq('id', id)
-    .select(`
-      *,
-      client:ct-clients(id, noms, surnom),
-      model:ct-models(id, name, category, base_price, image_url)
-    `)
+    .select('*')
     .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
+  // Enrich with relations
+  const enrichedOrders = await enrichOrdersWithRelations([orderData]);
+  const enrichedOrder = enrichedOrders[0];
+
   revalidatePath('/commandes');
-  return order as unknown as Order;
+  return enrichedOrder as unknown as Order;
 }
 
 export async function deleteOrder(id: string) {

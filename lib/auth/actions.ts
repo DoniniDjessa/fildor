@@ -47,16 +47,6 @@ export async function getCurrentUser() {
     return { ...user, profile: null };
   }
 
-  // Debug log to verify role is retrieved (only in development)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('getCurrentUser - Profile retrieved:', {
-      id: profile.id,
-      email: profile.email,
-      role: profile.role,
-      roleType: typeof profile.role,
-    });
-  }
-
   return {
     ...user,
     profile,

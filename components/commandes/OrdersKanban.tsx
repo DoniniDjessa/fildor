@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import OrderCard from './OrderCard';
-import { getOrdersByStatus, updateOrderStatus, OrderStatus, Order as OrderType } from '@/lib/actions/orders.actions';
+import { getOrders, getOrdersByStatus, updateOrderStatus, OrderStatus, Order as OrderType } from '@/lib/actions/orders.actions';
 
 const COLUMNS: { id: OrderStatus; label: string; emoji: string; color: string }[] = [
   { id: 'pending', label: 'En Attente', emoji: '⚪', color: 'bg-gray-100 dark:bg-gray-800' },
@@ -22,35 +22,28 @@ export default function OrdersKanban() {
   }, []);
 
   const loadOrders = async () => {
+    console.log('[OrdersKanban] loadOrders called');
     setLoading(true);
     try {
-      // Load orders for each status
-      const [pending, cutting, sewing, fitting, completed] = await Promise.all([
-        getOrdersByStatus('pending'),
-        getOrdersByStatus('cutting'),
-        getOrdersByStatus('sewing'),
-        getOrdersByStatus('fitting'),
-        getOrdersByStatus('completed'), // This will automatically filter to last 4 days
-      ]);
-
-      // Debug: Log loaded orders
-      console.log('Loaded orders:', {
-        pending: pending.length,
-        cutting: cutting.length,
-        sewing: sewing.length,
-        fitting: fitting.length,
-        completed: completed.length,
-        total: pending.length + cutting.length + sewing.length + fitting.length + completed.length,
-      });
-
-      // Combine all orders
-      const allOrders = [...pending, ...cutting, ...sewing, ...fitting, ...completed];
-      console.log('All orders combined:', allOrders);
+      console.log('[OrdersKanban] Fetching ALL orders...');
+      
+      // Get all orders at once
+      const allOrders = await getOrders();
+      
+      console.log('[OrdersKanban] All orders fetched:', allOrders.length);
+      console.log('[OrdersKanban] All orders:', allOrders);
+      
+      // Display orders list in console
+      console.log('Commandes:', allOrders);
+      
       setOrders(allOrders);
+      console.log('[OrdersKanban] Orders state updated with', allOrders.length, 'orders');
     } catch (error) {
-      console.error('Error loading orders:', error);
+      console.error('[OrdersKanban] Error loading orders:', error);
+      console.error('[OrdersKanban] Error details:', JSON.stringify(error, null, 2));
     } finally {
       setLoading(false);
+      console.log('[OrdersKanban] Loading set to false');
     }
   };
 
@@ -145,15 +138,6 @@ export default function OrdersKanban() {
                       : 'Client inconnu';
                     const modelName = order.model?.name || 'Modèle inconnu';
                     const remaining = order.total_price - (order.advance || 0);
-
-                    // Debug: Log image URLs
-                    if (order.fabric_image_url || order.client_reference_image_url) {
-                      console.log('Order images:', {
-                        orderId: order.id,
-                        fabricImage: order.fabric_image_url,
-                        clientReferenceImage: order.client_reference_image_url,
-                      });
-                    }
 
                     return (
                       <OrderCard
