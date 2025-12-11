@@ -16,11 +16,13 @@ import {
   BookOpen,
   Settings,
   Package,
+  Scissors,
   MessageSquare,
   Phone,
   Bell,
   DollarSign,
-  Receipt
+  Receipt,
+  Calendar
 } from 'lucide-react';
 import { signOut } from '@/lib/auth/actions';
 
@@ -35,6 +37,12 @@ const menuItems = [
     label: 'Commandes',
     href: '/commandes',
     icon: ShoppingBag,
+    disabled: false,
+  },
+  {
+    label: 'Rendez-vous',
+    href: '/appointments',
+    icon: Calendar,
     disabled: false,
   },
   // {
@@ -56,6 +64,12 @@ const menuItems = [
     disabled: false,
   },
   {
+    label: 'Couture',
+    href: '/couture',
+    icon: Scissors,
+    disabled: false,
+  },
+  {
     label: 'Clients',
     href: '/clients',
     icon: UserCircle,
@@ -66,6 +80,12 @@ const menuItems = [
     href: '/utilisateurs',
     icon: Users,
     disabled: false,
+  },
+  {
+    label: 'Employés',
+    href: '#',
+    icon: Users,
+    disabled: true,
   },
   {
     label: 'SMS',

@@ -12,7 +12,13 @@ const COLUMNS: { id: OrderStatus; label: string; emoji: string; color: string }[
   { id: 'completed', label: 'Terminé', emoji: '🟢', color: 'bg-green-100 dark:bg-green-900/30' },
 ];
 
-export default function OrdersKanban() {
+interface OrdersKanbanProps {
+  showLateOnly?: boolean;
+  searchQuery?: string;
+  onOrdersLoaded?: (orders: OrderType[]) => void;
+}
+
+export default function OrdersKanban({ showLateOnly = false, searchQuery = '', onOrdersLoaded }: OrdersKanbanProps) {
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
   const [draggedOrder, setDraggedOrder] = useState<OrderType | null>(null);
@@ -37,6 +43,9 @@ export default function OrdersKanban() {
       console.log('Commandes:', allOrders);
       
       setOrders(allOrders);
+      if (onOrdersLoaded) {
+        onOrdersLoaded(allOrders);
+      }
       console.log('[OrdersKanban] Orders state updated with', allOrders.length, 'orders');
     } catch (error) {
       console.error('[OrdersKanban] Error loading orders:', error);
@@ -78,7 +87,28 @@ export default function OrdersKanban() {
   };
 
   const getOrdersByStatus = (status: OrderStatus) => {
-    return orders.filter((order) => order.status === status);
+    let filtered = orders.filter((order) => order.status === status);
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((order) => {
+        const clientName = (order.client?.noms || order.client?.surnom || '').toLowerCase();
+        const modelName = (order.model?.name || '').toLowerCase();
+        return clientName.includes(query) || modelName.includes(query);
+      });
+    }
+    
+    // Apply late filter
+    if (showLateOnly) {
+      filtered = filtered.filter((order) => {
+        const daysUntilDelivery = getDaysUntilDelivery(order.delivery_date);
+        return daysUntilDelivery <= 3 && daysUntilDelivery >= 0 && 
+               (order.status === 'pending' || order.status === 'cutting' || order.status === 'sewing');
+      });
+    }
+    
+    return filtered;
   };
 
   const getDaysUntilDelivery = (dateString: string) => {

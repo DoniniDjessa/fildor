@@ -184,14 +184,18 @@ export default function ClientDetailsSidebar({
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <button
                     onClick={handleCall}
-                    className="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex flex-col items-center justify-center gap-1"
+                    disabled
+                    className="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 opacity-50 cursor-not-allowed flex flex-col items-center justify-center gap-1"
+                    title="Fonctionnalité non disponible"
                   >
                     <Phone size={18} />
                     <span className="text-[9px] font-semibold">Appeler</span>
                   </button>
                   <button
                     onClick={handleWhatsApp}
-                    className="p-3 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors flex flex-col items-center justify-center gap-1"
+                    disabled
+                    className="p-3 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 opacity-50 cursor-not-allowed flex flex-col items-center justify-center gap-1"
+                    title="Fonctionnalité non disponible"
                   >
                     <MessageCircle size={18} />
                     <span className="text-[9px] font-semibold">WhatsApp</span>
@@ -232,6 +236,28 @@ export default function ClientDetailsSidebar({
 
               {/* COLONNE 3 : Historique & Commandes (35%) */}
               <OrderHistory clientId={client.id} />
+            </div>
+
+            {/* Carte DÉPENSES ET HISTORIQUE COMPLET */}
+            <div className="mt-4 col-span-1 lg:col-span-3">
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border border-yellow-200 dark:border-yellow-800 rounded-[30px] p-4 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">💰</span>
+                    <div>
+                      <h3 className="font-title text-sm font-bold text-[#11142D] dark:text-gray-100">
+                        DÉPENSES ET HISTORIQUE COMPLET DU CLIENT
+                      </h3>
+                      <p className="font-poppins text-[10px] text-[#808191] dark:text-gray-400 mt-1">
+                        Fonctionnalité premium - Non disponible
+                      </p>
+                    </div>
+                  </div>
+                  <div className="px-4 py-2 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl">
+                    <span className="font-poppins text-xs font-bold">NON DISPONIBLE</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,7 +32,7 @@ interface User {
 }
 
 interface EditUserFormProps {
-  user: User;
+  user: User | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (user: User) => void;
@@ -50,13 +50,29 @@ export default function EditUserForm({ user, isOpen, onClose, onUpdate }: EditUs
   } = useForm<UpdateUserFormData>({
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
-      name: user.name,
-      phone: user.phone,
-      role: user.role,
+      name: user?.name || '',
+      phone: user?.phone || '',
+      role: user?.role || 'couturier',
     },
   });
 
+  // Update form when user changes
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name || '',
+        phone: user.phone || '',
+        role: user.role || 'couturier',
+      });
+    }
+  }, [user, reset]);
+
   const onSubmit = async (data: UpdateUserFormData) => {
+    if (!user) {
+      setError('Utilisateur introuvable');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
@@ -76,6 +92,18 @@ export default function EditUserForm({ user, isOpen, onClose, onUpdate }: EditUs
     setError(null);
     onClose();
   };
+
+  if (!user) {
+    return (
+      <RightSidebar isOpen={isOpen} onClose={handleClose} title="Modifier l'utilisateur">
+        <div className="p-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Utilisateur introuvable
+          </p>
+        </div>
+      </RightSidebar>
+    );
+  }
 
   return (
     <RightSidebar isOpen={isOpen} onClose={handleClose} title="Modifier l'utilisateur">

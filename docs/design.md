@@ -1,139 +1,151 @@
-Voici la spécification détaillée pour cette page Couture & Déstockage, avec la fameuse "Sidebar d'Historique" à droite.
+# 26_FEATURES_INTEGRATION_UI.MD - SOCIAL, FINANCES & PLANNING
 
-FICHIER : 25_production_stock_ui.md
-Copie ce fichier pour ton IA.
-
-Markdown
-
-# 25_PRODUCTION_STOCK_UI.MD - SUIVI CONSO & DÉSTOCKAGE
-
-## 1. Philosophie : "Qui a utilisé quoi ?"
-Cette page est le journal de bord de l'atelier. Elle sert à deux choses :
-1.  **Déduire le stock** en temps réel pendant la coupe.
-2.  **Tracer l'activité** (Feed) pour savoir qui travaille sur quoi.
+Ce fichier détaille l'intégration de 4 fonctionnalités spécifiques demandées.
 
 ---
 
-## 2. Layout Global (Split Screen)
+## 1. DÉTAILS CLIENT : La "Social Bar" & Anniversaires
 
-La page est divisée verticalement en deux zones fixes (pas de scroll global).
+Dans la page `/clients/[id]`, nous devons modifier la **Colonne 1 (Identité)** définie précédemment.
 
-### ZONE GAUCHE : L'Espace de Travail (65% largeur)
-C'est ici que les couturiers déclarent leur consommation.
-- **Header :** "Déclaration de Coupe".
-- **Contenu :** Un sélecteur de commande actif + Un formulaire rapide.
+### A. La "Social Action Bar" (Communication)
+Au lieu de simples liens, on crée une rangée de 3 boutons circulaires interactifs juste sous le nom du client.
 
-### ZONE DROITE : Le "Live Feed Atelier" (35% largeur)
-C'est la demande spécifique : une longue colonne qui part de la Navbar jusqu'au bas de l'écran.
-- **Style :** Fond blanc, bordure gauche discrète, ombre portée vers la gauche.
-- **Scroll :** Interne (seule cette colonne scrolle si la liste est longue).
-- **Contenu :** Timeline des actions récentes.
+**Design UI :**
+- Container : `flex gap-3 justify-center my-4`.
+- **Bouton WhatsApp (Primaire) :**
+  - Style : `bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white`.
+  - Icone : `MessageCircle`.
+  - Action : Ouvre `https://wa.me/22507...?text=Bonjour...`.
+- **Bouton Appel (Secondaire) :**
+  - Style : `bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white`.
+  - Icone : `Phone`.
+  - Action : `tel:+225...`.
+- **Bouton SMS (Tertiaire) :**
+  - Style : `bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white`.
+  - Icone : `MessageSquare`.
+  - Action : `sms:+225...`.
 
----
+### B. Le Widget "Anniversaire en Approche" 🎂
+Si l'anniversaire est dans moins de 7 jours, une carte spéciale apparaît en haut de la fiche client.
 
-## 3. UI Zone Gauche : Le "Quick Deduct"
-
-On évite les formulaires complexes. On veut de la vitesse.
-
-### A. Sélecteur de Commande (Visual Grid)
-Une grille de cartes représentant les commandes au statut **"En Coupe"** ou **"Couture"**.
-- **Carte Commande :**
-  - Photo Modèle/Tissu.
-  - Nom Client (Gras).
-  - Badge : "Prévu : 3 yards".
-- **Interaction :** Au clic, la commande est sélectionnée.
-
-### B. Le Panneau de Déduction (Une fois commande sélectionnée)
-Apparaît en dessous ou remplace la grille.
-1.  **Matière :** Pré-remplie si définie dans la commande (ex: "Bazin Riche Bleu"). Sinon, liste déroulante recherche.
-2.  **Quantité utilisée :**
-    - Input géant numérique.
-    - Unité (m/yards) affichée à côté.
-    - Boutons rapides : `[ Tout le coupon ]` `[ 1/2 ]`.
-3.  **Qui coupe ?** (Sélecteur d'employé, ex: "Ali Sanogo").
-    - *Note :* Si l'employé est connecté avec son compte, c'est auto-rempli.
-4.  **Bouton Action :** Gros bouton rouge dégradé `✂️ CONFIRMER COUPE`.
+**Design UI :**
+- **Fond :** Dégradé Or/Jaune (`bg-gradient-to-r from-yellow-50 to-orange-50`).
+- **Bordure :** `border border-yellow-200`.
+- **Contenu :**
+  - Icone : 🎂 (Cake).
+  - Texte : "Anniversaire dans **3 jours** (12 Déc)."
+  - **Bouton Action :** "Envoyer Vœux Promo".
+    - *Clic :* Ouvre WhatsApp avec un message pré-rempli : *"Joyeux anniversaire [Nom] ! Profitez de -10% sur votre prochaine tenue chez [Nom Atelier] 🎉"*.
 
 ---
 
-## 4. UI Zone Droite : Le "Log Vertical" (Full Height)
+## 2. DASHBOARD : Le "Financial Switcher" (Jour/Mois/Année)
 
-C'est la colonne "Historique".
+Dans la **ZONE A (Hero Graph)** du Dashboard, nous devons permettre de changer la vue temporelle.
 
-### Container
-- `h-[calc(100vh-64px)]` (Hauteur écran moins navbar).
-- `overflow-y-auto` (Scrollable).
-- `bg-white border-l border-slate-100 p-4`.
+**Design UI :**
+- **Position :** En haut à droite de la carte violette.
+- **Composant :** Segmented Control (Pillule segmentée).
+  - Fond : `bg-black/20` (Translucide sur le fond violet).
+  - Item Actif : `bg-white text-[#6C5DD3] shadow-sm rounded-full`.
+  - Item Inactif : `text-white/70 hover:text-white`.
+  - **Options :** `24H` | `Mois` | `Année`.
 
-### Header de la Colonne
-- Titre : "Activité Atelier".
-- Sous-titre : "Aujourd'hui".
-
-### Les Items (Les Logs)
-Design type "Timeline" connectée par un trait vertical fin.
-
-**Item Card :**
-- **Avatar :** Photo de l'employé (Ali Sanogo).
-- **Contenu Texte (Rich Text) :**
-  - "Ali a coupé **3.5m** de *Soie Italienne*."
-  - "Pour : **Commande Mariam T.**"
-- **Metas :**
-  - Heure : "Il y a 2 min".
-  - Indicateur Stock : Petit badge rouge `Stock -3.5`.
+**Logique d'Affichage (Data Binding) :**
+Au clic, les gros chiffres changent instantanément (sans recharger la page).
+- **Vue 24H :** Affiche la recette du jour (ex: "25.000 F").
+  - *Comparaison :* "Hier: 0 F".
+- **Vue Mois :** Affiche le cumul mensuel (ex: "1.450.000 F").
+  - *Comparaison :* "vs Mois dernier (+12%)".
+- **Vue Année :** Affiche le CA annuel.
 
 ---
 
-## 5. Le Flow (Logique Métier)
+## 3. PAGE RDV : La Timeline Chronologique (`/appointments`)
 
-1.  **Sélection :** Le couturier clique sur la carte "Commande Mariam T." (qui est au statut 'Coupe').
-2.  **Vérification :** Le système affiche : "Stock disponible pour Soie Italienne : 12m".
-3.  **Saisie :** Le couturier tape "3" (mètres).
-4.  **Validation :** Clic sur "Confirmer".
-5.  **Backend Updates (Transaction Atomique) :**
-    - `Stock Tissu` : 12 - 3 = **9m**.
-    - `Commande` : Statut passe de 'À couper' à 'Cousu' (optionnel) ou ajoute une ligne de coût réel.
-    - `Logs` : Création d'une entrée "Ali / Mariam / 3m".
-6.  **Animation UI :**
-    - La colonne de droite flashe ou ajoute le nouvel item en haut avec une animation `slide-down`.
-    - Le stock disponible se met à jour instantanément.
+Une nouvelle page dédiée pour remplacer l'agenda papier.
+
+**Layout :** Une seule colonne centrale étroite (max-width: 600px) pour la lisibilité sur tablette.
+
+### Structure "Timeline"
+Liste groupée par jours relatifs.
+
+**Groupe 1 : "Aujourd'hui" (Today)**
+- Header : `Aujourd'hui • Mer 12 Déc` (Gras, gros).
+
+**Les Cartes RDV (Appointment Card) :**
+- **Design :**
+  - `bg-white rounded-2xl p-4 mb-3 border-l-4 shadow-sm`.
+  - La couleur de la bordure gauche indique le type.
+- **Types & Couleurs :**
+  - 🟣 **Essayage (Fitting) :** Border Purple (`border-l-[#6C5DD3]`).
+  - 🟢 **Livraison (Delivery) :** Border Green (`border-l-[#25D366]`).
+  - 🔵 **Prise de Mesures :** Border Blue (`border-l-blue-400`).
+
+**Contenu de la Carte :**
+- **Gauche (Heure) :** `14:30` (Gros, Font mono).
+- **Centre (Info) :**
+  - Titre : **Mme Koné** (Gras).
+  - Sous-titre : *Robe Sirène Mariage* (Italique gris).
+- **Droite (Actions) :**
+  - Bouton Check rond (Validation).
+  - Clic change l'état visuel (grisé/barré).
+
+**Groupe 2 : "Demain"**
+... Idem ...
+
+**Groupe 3 : "Cette Semaine"**
+... Idem ...
 
 ---
 
-## 6. Exemple Code (Activity Log Item)
+## 4. Exemple Code (Appointment Card)
 
 ```tsx
-// components/ActivityLogItem.tsx
-import { Scissors, User } from 'lucide-react';
+import { CheckCircle, MapPin } from 'lucide-react';
 
-export const ActivityLogItem = ({ log }) => {
+export const AppointmentCard = ({ rdv }) => {
+  // Couleur dynamique selon le type
+  const borderColors = {
+    fitting: 'border-l-[#6C5DD3]',
+    delivery: 'border-l-[#25D366]',
+    measure: 'border-l-blue-400'
+  };
+
+  const labels = {
+    fitting: 'Essayage',
+    delivery: 'Livraison',
+    measure: 'Mesures'
+  };
+
   return (
-    <div className="relative pl-6 pb-8 border-l-2 border-slate-100 last:border-0 last:pb-0">
-      {/* Point sur la timeline */}
-      <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#FF754C] ring-4 ring-white flex items-center justify-center">
-        <Scissors size={8} className="text-white" />
+    <div className={`bg-white rounded-2xl p-4 mb-3 border-l-[6px] shadow-sm flex items-center gap-4 ${borderColors[rdv.type]}`}>
+      
+      {/* HEURE */}
+      <div className="flex flex-col items-center min-w-[50px]">
+        <span className="text-xl font-bold text-slate-700">{rdv.time}</span>
+        <span className="text-[10px] text-slate-400 uppercase font-medium">{labels[rdv.type]}</span>
       </div>
 
-      <div className="flex flex-col gap-1">
-        {/* Header : Qui et Quand */}
-        <div className="flex justify-between items-center">
-          <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
-            <User size={10} /> {log.employee_name}
-          </span>
-          <span className="text-[9px] text-slate-400">{log.time_ago}</span>
-        </div>
-
-        {/* Corps : Quoi */}
-        <div className="bg-slate-50 p-2 rounded-lg mt-1 border border-slate-100">
-          <p className="text-[11px] text-slate-600 leading-tight">
-            A utilisé <span className="font-bold text-[#6C5DD3]">{log.quantity}{log.unit}</span> de <span className="font-medium">{log.material_name}</span>
-          </p>
-          <div className="mt-1 pt-1 border-t border-slate-200/50">
-            <p className="text-[10px] text-slate-400">
-              📂 {log.order_ref}
-            </p>
+      {/* DÉTAILS */}
+      <div className="flex-1 border-l border-slate-100 pl-4">
+        <h4 className="text-sm font-bold text-[#11142D]">{rdv.client_name}</h4>
+        <p className="text-xs text-slate-500 mb-1">{rdv.outfit_desc}</p>
+        
+        {/* Localisation (si livraison) */}
+        {rdv.location && (
+          <div className="flex items-center gap-1 text-[10px] text-gray-400">
+            <MapPin size={10} /> {rdv.location}
           </div>
-        </div>
+        )}
       </div>
+
+      {/* ACTION */}
+      <button className="text-slate-300 hover:text-green-500 transition-colors">
+        <CheckCircle size={28} />
+      </button>
+
     </div>
   );
 };

@@ -131,6 +131,30 @@ export interface Order {
   };
 }
 
+export async function getOrdersByClient(clientId: string) {
+  const supabase = await createServerClient();
+
+  // Fetch orders for this client
+  const { data: ordersData, error: ordersError } = await supabase
+    .from('ct-orders')
+    .select('*')
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: false });
+
+  if (ordersError) {
+    console.error('[getOrdersByClient] Error fetching orders:', ordersError);
+    throw new Error(ordersError.message);
+  }
+
+  if (!ordersData || ordersData.length === 0) {
+    return [];
+  }
+
+  // Enrich with relations
+  const enriched = await enrichOrdersWithRelations(ordersData);
+  return enriched as Order[];
+}
+
 export async function getOrders() {
   const supabase = await createServerClient();
 
