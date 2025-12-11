@@ -72,7 +72,7 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
       noms: client.noms || '',
       surnom: client.surnom || '',
       email: client.email || '',
-      phone: client.phone,
+      phone: client.phone || '',
       whatsapp: client.whatsapp || '',
       height: client.height?.toString() || '',
       weight: client.weight?.toString() || '',
@@ -138,24 +138,24 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Noms
           </label>
           <input
             type="text"
             {...register('noms')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           />
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Surnom
           </label>
           <input
             type="text"
             {...register('surnom')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           />
           <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
             Si le client ne veut pas donner son nom
@@ -163,13 +163,13 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Email
           </label>
           <input
             type="email"
             {...register('email')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           />
           {errors.email && (
             <p className="mt-1 text-[10px] text-red-500">{errors.email.message}</p>
@@ -177,13 +177,13 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Téléphone *
           </label>
           <input
             type="tel"
             {...register('phone')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           />
           {errors.phone && (
             <p className="mt-1 text-[10px] text-red-500">{errors.phone.message}</p>
@@ -191,60 +191,60 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             WhatsApp
           </label>
           <input
             type="tel"
             {...register('whatsapp')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
               Taille (cm)
             </label>
             <input
               type="number"
               step="0.1"
               {...register('height')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+              className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
             />
           </div>
           <div>
-            <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
               Poids (kg)
             </label>
             <input
               type="number"
               step="0.1"
               {...register('weight')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+              className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Localisation
           </label>
           <input
             type="text"
             {...register('location')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           />
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Date de naissance (Jour / Mois)
           </label>
           <div className="grid grid-cols-2 gap-2">
             <select
               {...register('dob_day')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+              className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
             >
               <option value="">Jour</option>
               {days.map((day) => (
@@ -255,7 +255,7 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
             </select>
             <select
               {...register('dob_month')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+              className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
             >
               <option value="">Mois</option>
               {months.map((month) => (
@@ -278,7 +278,7 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Notes
           </label>
           <textarea
@@ -288,7 +288,7 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
           />
         </div>
 
-        <div className="flex gap-2 pt-4 border-t border-rose-100 dark:border-purple-800">
+        <div className="flex gap-3 pt-6 border-t border-white/20 dark:border-white/10">
           <button
             type="button"
             onClick={handleClose}
@@ -299,7 +299,7 @@ export default function EditClientForm({ client, isOpen, onClose, onUpdate }: Ed
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-rose-400 to-pink-600 hover:from-rose-500 hover:to-pink-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-[#6C5DD3] to-[#8B7AE8] hover:from-[#5A4BC2] hover:to-[#7A6AD8] rounded-[30px] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {loading ? 'Enregistrement...' : 'Enregistrer'}
           </button>

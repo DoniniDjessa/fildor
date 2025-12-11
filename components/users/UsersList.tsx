@@ -83,7 +83,7 @@ export default function UsersList({ initialUsers }: UsersListProps) {
                 <h3 className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
                   {user.name}
                 </h3>
-                <span className="text-[10px] px-2 py-0.5 bg-rose-100 dark:bg-purple-900/30 text-rose-600 dark:text-purple-400 rounded-full">
+                <span className="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full">
                   {getRoleLabel(user.role)}
                 </span>
               </div>
@@ -97,7 +97,7 @@ export default function UsersList({ initialUsers }: UsersListProps) {
             <div className="flex items-center gap-1 ml-2">
               <button
                 onClick={() => setEditingUser(user)}
-                className="p-1.5 text-rose-500 hover:bg-rose-100 dark:hover:bg-purple-900/30 rounded transition-colors"
+                className="p-1.5 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
               >
                 <Pencil className="w-3.5 h-3.5" />
               </button>

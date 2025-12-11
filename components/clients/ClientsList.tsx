@@ -103,7 +103,7 @@ export default function ClientsList({ initialClients }: ClientsListProps) {
               <div className="flex items-center gap-1 ml-2">
                 <button
                   onClick={() => setEditingClient(client)}
-                  className="p-1.5 text-rose-500 hover:bg-rose-100 dark:hover:bg-purple-900/30 rounded transition-colors"
+                  className="p-1.5 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>

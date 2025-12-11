@@ -29,10 +29,12 @@ export async function getUsers() {
     .order('created_at', { ascending: false });
 
   if (error) {
+    console.error('Error fetching users:', error);
     throw new Error(error.message);
   }
 
-  return data;
+  // Return empty array if no users found
+  return data || [];
 }
 
 export async function getUserById(id: string) {

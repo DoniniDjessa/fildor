@@ -19,7 +19,7 @@ export default function DeleteConfirmModal({
 }: DeleteConfirmModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-4 border border-rose-100 dark:border-purple-800">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-4 border border-gray-200 dark:border-gray-800">
         <div className="flex items-start gap-3 mb-4">
           <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
             <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />

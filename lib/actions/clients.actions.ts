@@ -2,6 +2,7 @@
 
 import { createServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { deleteImage, extractStoragePath } from '@/lib/storage/images';
 
 export interface ClientFormData {
   noms?: string;
@@ -15,6 +16,7 @@ export interface ClientFormData {
   dob_day?: number;
   dob_month?: number;
   notes?: string;
+  photo_url?: string;
 }
 
 export async function getClients() {
@@ -55,13 +57,21 @@ export async function createClient(clientData: ClientFormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Ensure at least one name field is provided (for backward compatibility with 'name' column if it exists)
+  const name = clientData.noms || clientData.surnom || 'Client sans nom';
+  
+  const insertData: any = {
+    ...clientData,
+    created_by: user?.id,
+    updated_by: user?.id,
+    // Always include 'name' field for backward compatibility if the column exists
+    // This prevents "null value in column 'name'" errors
+    name: name,
+  };
+
   const { data, error } = await supabase
     .from('ct-clients')
-    .insert({
-      ...clientData,
-      created_by: user?.id,
-      updated_by: user?.id,
-    })
+    .insert(insertData)
     .select()
     .single();
 
@@ -101,7 +111,7 @@ export async function updateClient(id: string, clientData: Partial<ClientFormDat
 export async function deleteClient(id: string) {
   const supabase = await createServerClient();
 
-  // Get client data before deletion for action log
+  // Get client data before deletion for action log and image deletion
   const { data: clientData } = await supabase
     .from('ct-clients')
     .select('*')
@@ -122,6 +132,14 @@ export async function deleteClient(id: string) {
       record_data: clientData as any,
       user_id: user.id,
     });
+  }
+
+  // Delete associated image if exists
+  if (clientData?.photo_url) {
+    const storagePath = await extractStoragePath(clientData.photo_url);
+    if (storagePath) {
+      await deleteImage(storagePath);
+    }
   }
 
   // Delete the client

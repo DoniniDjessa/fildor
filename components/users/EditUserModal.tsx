@@ -70,7 +70,7 @@ export default function EditUserModal({ user, onClose, onUpdate }: EditUserModal
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-4 border border-rose-100 dark:border-purple-800">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-4 border border-gray-200 dark:border-gray-800">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-title text-base font-bold text-gray-900 dark:text-gray-100">
             Modifier l&apos;utilisateur
@@ -97,7 +97,7 @@ export default function EditUserModal({ user, onClose, onUpdate }: EditUserModal
             <input
               type="text"
               {...register('name')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+              className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
             />
             {errors.name && (
               <p className="mt-1 text-[10px] text-red-500">{errors.name.message}</p>
@@ -111,7 +111,7 @@ export default function EditUserModal({ user, onClose, onUpdate }: EditUserModal
             <input
               type="tel"
               {...register('phone')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+              className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
             />
             {errors.phone && (
               <p className="mt-1 text-[10px] text-red-500">{errors.phone.message}</p>
@@ -124,7 +124,7 @@ export default function EditUserModal({ user, onClose, onUpdate }: EditUserModal
             </label>
             <select
               {...register('role')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+              className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
             >
               {roleOptions.map((option) => (
                 <option key={option.value} value={option.value}>

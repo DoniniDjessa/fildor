@@ -87,13 +87,13 @@ export default function EditUserForm({ user, isOpen, onClose, onUpdate }: EditUs
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Nom complet
           </label>
           <input
             type="text"
             {...register('name')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           />
           {errors.name && (
             <p className="mt-1 text-[10px] text-red-500">{errors.name.message}</p>
@@ -101,13 +101,13 @@ export default function EditUserForm({ user, isOpen, onClose, onUpdate }: EditUs
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Téléphone
           </label>
           <input
             type="tel"
             {...register('phone')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           />
           {errors.phone && (
             <p className="mt-1 text-[10px] text-red-500">{errors.phone.message}</p>
@@ -115,12 +115,12 @@ export default function EditUserForm({ user, isOpen, onClose, onUpdate }: EditUs
         </div>
 
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[#11142D] dark:text-gray-300 mb-2">
             Rôle
           </label>
           <select
             {...register('role')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
+            className="w-full px-4 py-3 text-sm rounded-[30px] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-[#1A1D29]/50 text-[#11142D] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#6C5DD3]/20 dark:focus:ring-[#6C5DD3]/30 transition-all"
           >
             {roleOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -133,7 +133,7 @@ export default function EditUserForm({ user, isOpen, onClose, onUpdate }: EditUs
           )}
         </div>
 
-        <div className="flex gap-2 pt-4 border-t border-rose-100 dark:border-purple-800">
+        <div className="flex gap-3 pt-6 border-t border-white/20 dark:border-white/10">
           <button
             type="button"
             onClick={handleClose}
@@ -144,7 +144,7 @@ export default function EditUserForm({ user, isOpen, onClose, onUpdate }: EditUs
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-rose-400 to-pink-600 hover:from-rose-500 hover:to-pink-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-[#6C5DD3] to-[#8B7AE8] hover:from-[#5A4BC2] hover:to-[#7A6AD8] rounded-[30px] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {loading ? 'Enregistrement...' : 'Enregistrer'}
           </button>

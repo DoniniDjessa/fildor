@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createClient } from '@/lib/actions/clients.actions';
+import { Camera, User, Shirt, Baby, MessageCircle, Phone } from 'lucide-react';
+import { createClient, updateClient } from '@/lib/actions/clients.actions';
+import { uploadClientPhoto } from '@/lib/actions/storage.actions';
 import RightSidebar from '../forms/RightSidebar';
 
 const createClientSchema = z.object({
@@ -13,26 +15,14 @@ const createClientSchema = z.object({
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   phone: z.string().min(1, 'Le téléphone est requis'),
   whatsapp: z.string().optional(),
-  height: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
-  weight: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
   location: z.string().optional(),
-  dob_day: z.string().optional(),
-  dob_month: z.string().optional(),
   notes: z.string().optional(),
-}).refine((data) => {
-  // Si dob_day ou dob_month est rempli, les deux sont requis
-  const hasDay = data.dob_day && data.dob_day !== '';
-  const hasMonth = data.dob_month && data.dob_month !== '';
-  if (hasDay || hasMonth) {
-    return hasDay && hasMonth;
-  }
-  return true;
-}, {
-  message: 'Le jour et le mois sont requis si la date de naissance est renseignée',
-  path: ['dob_month'],
 });
 
-type CreateClientFormData = z.infer<typeof createClientSchema>;
+type CreateClientFormData = z.infer<typeof createClientSchema> & {
+  gender?: 'homme' | 'femme' | 'enfant';
+  isVIP?: boolean;
+};
 
 interface CreateClientFormProps {
   isOpen: boolean;
@@ -43,6 +33,8 @@ interface CreateClientFormProps {
 export default function CreateClientForm({ isOpen, onClose, onSuccess }: CreateClientFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   const {
     register,
@@ -50,25 +42,68 @@ export default function CreateClientForm({ isOpen, onClose, onSuccess }: CreateC
     formState: { errors },
     reset,
     watch,
+    setValue,
   } = useForm<CreateClientFormData>({
     resolver: zodResolver(createClientSchema),
   });
 
-  const dobDay = watch('dob_day');
-  const dobMonth = watch('dob_month');
+  const selectedGender = watch('gender');
+  const isVIP = watch('isVIP');
+  const phone = watch('phone');
 
   const onSubmit = async (data: CreateClientFormData) => {
     setError(null);
     setLoading(true);
 
     try {
-      await createClient({
-        ...data,
-        dob_day: data.dob_day ? parseInt(data.dob_day) : undefined,
-        dob_month: data.dob_month ? parseInt(data.dob_month) : undefined,
-        email: data.email || undefined,
+      // Remove fields not in database schema (gender, isVIP)
+      const { gender, isVIP, ...clientData } = data;
+      
+      // Upload photo first if provided (we need a temp ID)
+      let photoUrl: string | undefined;
+      if (photoFile) {
+        try {
+          // Generate a temporary UUID for the file name
+          const tempId = crypto.randomUUID();
+          const formData = new FormData();
+          formData.append('file', photoFile);
+          formData.append('clientId', tempId);
+          photoUrl = await uploadClientPhoto(formData);
+        } catch (photoError: any) {
+          console.error('Photo upload failed:', photoError);
+          // Continue without photo if upload fails
+        }
+      }
+
+      // Create client with photo URL if available
+      const newClient = await createClient({
+        ...clientData,
+        email: clientData.email || undefined,
+        photo_url: photoUrl,
       });
+
+          // If we used a temp ID, rename the file
+      if (photoFile && photoUrl) {
+        try {
+          // Delete old file and upload with correct ID
+          const { deleteImage, extractStoragePath } = await import('@/lib/storage/images');
+          const oldPath = await extractStoragePath(photoUrl);
+          if (oldPath) {
+            await deleteImage(oldPath);
+          }
+          const formData = new FormData();
+          formData.append('file', photoFile);
+          formData.append('clientId', newClient.id);
+          photoUrl = await uploadClientPhoto(formData);
+          await updateClient(newClient.id, { photo_url: photoUrl });
+        } catch (error) {
+          console.error('Failed to rename photo:', error);
+        }
+      }
+
       reset();
+      setPhotoPreview(null);
+      setPhotoFile(null);
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -78,27 +113,34 @@ export default function CreateClientForm({ isOpen, onClose, onSuccess }: CreateC
     }
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setValue('phone', value);
+    // Auto-détecter WhatsApp si le numéro commence par + ou contient des chiffres
+    if (value && !watch('whatsapp')) {
+      setValue('whatsapp', value);
+    }
+  };
+
   const handleClose = () => {
     reset();
     setError(null);
+    setPhotoPreview(null);
+    setPhotoFile(null);
     onClose();
   };
-
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const months = [
-    { value: '1', label: 'Janvier' },
-    { value: '2', label: 'Février' },
-    { value: '3', label: 'Mars' },
-    { value: '4', label: 'Avril' },
-    { value: '5', label: 'Mai' },
-    { value: '6', label: 'Juin' },
-    { value: '7', label: 'Juillet' },
-    { value: '8', label: 'Août' },
-    { value: '9', label: 'Septembre' },
-    { value: '10', label: 'Octobre' },
-    { value: '11', label: 'Novembre' },
-    { value: '12', label: 'Décembre' },
-  ];
 
   return (
     <RightSidebar isOpen={isOpen} onClose={handleClose} title="Nouveau client">
@@ -108,170 +150,204 @@ export default function CreateClientForm({ isOpen, onClose, onSuccess }: CreateC
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-        <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Noms
-          </label>
-          <input
-            type="text"
-            {...register('noms')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Surnom
-          </label>
-          <input
-            type="text"
-            {...register('surnom')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-          />
-          <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
-            Si le client ne veut pas donner son nom
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Email
-          </label>
-          <input
-            type="email"
-            {...register('email')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-          />
-          {errors.email && (
-            <p className="mt-1 text-[10px] text-red-500">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Téléphone *
-          </label>
-          <input
-            type="tel"
-            {...register('phone')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-          />
-          {errors.phone && (
-            <p className="mt-1 text-[10px] text-red-500">{errors.phone.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-            WhatsApp
-          </label>
-          <input
-            type="tel"
-            {...register('whatsapp')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Taille (cm)
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Groupe 1 : Qui ? */}
+        <div className="space-y-3">
+          <h3 className="font-title text-xs font-semibold text-[#11142D] dark:text-gray-300 mb-2">
+            Qui ?
+          </h3>
+          
+          {/* Photo Upload */}
+          <div className="flex justify-center mb-3">
+            <label className="relative cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+              />
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#6C5DD3] to-[#8B7AE8] flex items-center justify-center text-white shadow-lg relative overflow-hidden">
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <Camera className="w-8 h-8" />
+                )}
+                <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-white opacity-0 hover:opacity-100 transition-opacity" />
+                </div>
+              </div>
             </label>
-            <input
-              type="number"
-              step="0.1"
-              {...register('height')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-            />
           </div>
-          <div>
-            <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Poids (kg)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              {...register('weight')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-            />
-          </div>
-        </div>
 
-        <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Localisation
-          </label>
-          <input
-            type="text"
-            {...register('location')}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Date de naissance (Jour / Mois)
-          </label>
+          {/* Prénom | Nom côte à côte */}
           <div className="grid grid-cols-2 gap-2">
-            <select
-              {...register('dob_day')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-            >
-              <option value="">Jour</option>
-              {days.map((day) => (
-                <option key={day} value={day.toString()}>
-                  {day}
-                </option>
-              ))}
-            </select>
-            <select
-              {...register('dob_month')}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500"
-            >
-              <option value="">Mois</option>
-              {months.map((month) => (
-                <option key={month.value} value={month.value}>
-                  {month.label}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-1 ml-1">
+                Prénom
+              </label>
+              <input
+                type="text"
+                {...register('noms')}
+                className="w-full h-9 text-xs bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-1 focus:ring-[#6C5DD3] transition-all px-3"
+                placeholder="Prénom"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-1 ml-1">
+                Nom
+              </label>
+              <input
+                type="text"
+                {...register('surnom')}
+                className="w-full h-9 text-xs bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-1 focus:ring-[#6C5DD3] transition-all px-3"
+                placeholder="Nom"
+              />
+            </div>
           </div>
-          {(errors.dob_day || errors.dob_month) && (
-            <p className="mt-1 text-[10px] text-red-500">
-              {errors.dob_day?.message || errors.dob_month?.message}
-            </p>
-          )}
-          {(dobDay || dobMonth) && (!dobDay || !dobMonth) && (
-            <p className="mt-1 text-[10px] text-amber-500">
-              Le jour et le mois sont requis
-            </p>
-          )}
+
+          {/* Téléphone avec icône WhatsApp */}
+          <div>
+            <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-1 ml-1">
+              Téléphone (WhatsApp) *
+            </label>
+            <div className="relative">
+              <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+              <input
+                type="tel"
+                {...register('phone')}
+                onChange={handlePhoneChange}
+                className="w-full h-9 text-xs bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-1 focus:ring-[#6C5DD3] transition-all pl-10 pr-3"
+                placeholder="+225 XX XX XX XX XX"
+              />
+            </div>
+            {errors.phone && (
+              <p className="mt-1 text-[10px] text-red-500">{errors.phone.message}</p>
+            )}
+          </div>
         </div>
 
+        {/* Groupe 2 : Genre (Sélecteur Visuel) */}
+        <div className="space-y-3">
+          <h3 className="font-title text-xs font-semibold text-[#11142D] dark:text-gray-300 mb-2">
+            Genre
+          </h3>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setValue('gender', 'homme')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                selectedGender === 'homme'
+                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400'
+                  : 'bg-slate-50 dark:bg-slate-800 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+              }`}
+            >
+              <User className={`w-6 h-6 mx-auto mb-2 ${
+                selectedGender === 'homme' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'
+              }`} />
+              <span className={`text-[10px] font-semibold ${
+                selectedGender === 'homme' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'
+              }`}>
+                Homme
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setValue('gender', 'femme')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                selectedGender === 'femme'
+                  ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-500 dark:border-pink-400'
+                  : 'bg-slate-50 dark:bg-slate-800 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+              }`}
+            >
+              <Shirt className={`w-6 h-6 mx-auto mb-2 ${
+                selectedGender === 'femme' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-400'
+              }`} />
+              <span className={`text-[10px] font-semibold ${
+                selectedGender === 'femme' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500'
+              }`}>
+                Femme
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setValue('gender', 'enfant')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                selectedGender === 'enfant'
+                  ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 dark:border-yellow-400'
+                  : 'bg-slate-50 dark:bg-slate-800 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+              }`}
+            >
+              <Baby className={`w-6 h-6 mx-auto mb-2 ${
+                selectedGender === 'enfant' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-400'
+              }`} />
+              <span className={`text-[10px] font-semibold ${
+                selectedGender === 'enfant' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500'
+              }`}>
+                Enfant
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Groupe 3 : Localisation */}
+        <div className="space-y-3">
+          <h3 className="font-title text-xs font-semibold text-[#11142D] dark:text-gray-300 mb-2">
+            Localisation
+          </h3>
+          
+          <div>
+            <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-1 ml-1">
+              Quartier / Ville
+            </label>
+            <input
+              type="text"
+              {...register('location')}
+              className="w-full h-9 text-xs bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-1 focus:ring-[#6C5DD3] transition-all px-3"
+              placeholder="Ex: Cocody, Angré"
+            />
+          </div>
+
+          {/* Switch VIP */}
+          <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+            <span className="text-xs font-semibold text-[#11142D] dark:text-gray-300">
+              Client VIP ?
+            </span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                {...register('isVIP')}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#6C5DD3] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6C5DD3]"></div>
+            </label>
+          </div>
+        </div>
+
+        {/* Notes */}
         <div>
-          <label className="block text-[10px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Notes
+          <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-1 ml-1">
+            Note Perso
           </label>
           <textarea
             {...register('notes')}
             rows={3}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-rose-200 dark:border-purple-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-pink-500 resize-none"
+            className="w-full text-xs bg-yellow-50 dark:bg-yellow-900/10 border-none rounded-xl focus:ring-1 focus:ring-[#6C5DD3] transition-all px-3 py-2 resize-none"
+            placeholder="Ex: Aime les robes cintrées"
           />
         </div>
 
-        <div className="flex gap-2 pt-4 border-t border-rose-100 dark:border-purple-800">
+        <div className="flex gap-3 pt-4 border-t border-white/20 dark:border-white/10">
           <button
             type="button"
             onClick={handleClose}
-            className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="flex-1 h-10 text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           >
             Annuler
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-rose-400 to-pink-600 hover:from-rose-500 hover:to-pink-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 h-10 text-xs font-bold text-white bg-gradient-to-r from-[#6C5DD3] to-[#8B7AE8] hover:from-[#5A4BC2] hover:to-[#7A6AD8] rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {loading ? 'Création...' : 'Créer'}
           </button>
