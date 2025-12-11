@@ -1,10 +1,29 @@
 'use client';
 
 import { TrendingUp, Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getDashboardStats, DashboardStats } from '@/lib/actions/dashboard.actions';
 
 export default function HeroCard() {
-  const [selectedPeriod, setSelectedPeriod] = useState('Ce mois-ci');
+  const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, [selectedPeriod]);
+
+  const loadStats = async () => {
+    setLoading(true);
+    try {
+      const dashboardStats = await getDashboardStats(selectedPeriod);
+      setStats(dashboardStats);
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-gradient-to-br from-[#6C5DD3] to-[#8B7AE8] rounded-[30px] p-6 shadow-xl relative overflow-hidden">
@@ -21,12 +40,12 @@ export default function HeroCard() {
         <div className="relative">
           <select
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
+            onChange={(e) => setSelectedPeriod(e.target.value as 'month' | 'quarter' | 'year')}
             className="appearance-none bg-white/20 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 pr-7 rounded-[15px] border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
           >
-            <option value="Ce mois-ci" className="text-[#11142D]">Ce mois-ci</option>
-            <option value="Ce trimestre" className="text-[#11142D]">Ce trimestre</option>
-            <option value="Cette année" className="text-[#11142D]">Cette année</option>
+            <option value="month" className="text-[#11142D]">Ce mois-ci</option>
+            <option value="quarter" className="text-[#11142D]">Ce trimestre</option>
+            <option value="year" className="text-[#11142D]">Cette année</option>
           </select>
           <Calendar className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white pointer-events-none" />
         </div>
@@ -36,11 +55,19 @@ export default function HeroCard() {
       <div className="grid grid-cols-2 gap-3 mb-4 relative z-10">
         <div className="bg-white/20 backdrop-blur-sm rounded-[15px] p-3 border border-white/30">
           <p className="font-poppins text-white/80 text-[10px] mb-0.5">Total Commandes</p>
-          <p className="text-white text-lg font-bold font-title">42</p>
+          {loading ? (
+            <p className="text-white text-lg font-bold font-title">...</p>
+          ) : (
+            <p className="text-white text-lg font-bold font-title">
+              {stats?.ordersThisMonth || 0}
+            </p>
+          )}
         </div>
         <div className="bg-white/20 backdrop-blur-sm rounded-[15px] p-3 border border-white/30">
           <p className="font-poppins text-white/80 text-[10px] mb-0.5">Chiffre d&apos;Affaires</p>
-          <p className="text-white text-lg font-bold font-title">1.2M</p>
+          <p className="text-white text-lg font-bold font-title blur-sm select-none">
+            {loading ? '...' : '••••••'}
+          </p>
           <p className="font-poppins text-white/60 text-[10px]">FCFA</p>
         </div>
       </div>
@@ -60,10 +87,17 @@ export default function HeroCard() {
       </div>
 
       {/* Trend indicator */}
-      <div className="flex items-center gap-1.5 mt-3 relative z-10">
-        <TrendingUp className="w-3 h-3 text-white/80" />
-        <span className="font-poppins text-white/80 text-[10px]">+12% par rapport au mois dernier</span>
-      </div>
+      {stats && stats.ordersLastMonth > 0 && (
+        <div className="flex items-center gap-1.5 mt-3 relative z-10">
+          <TrendingUp className="w-3 h-3 text-white/80" />
+          <span className="font-poppins text-white/80 text-[10px]">
+            {stats.ordersThisMonth > stats.ordersLastMonth ? '+' : ''}
+            {stats.ordersLastMonth > 0
+              ? Math.round(((stats.ordersThisMonth - stats.ordersLastMonth) / stats.ordersLastMonth) * 100)
+              : 0}% par rapport au mois dernier
+          </span>
+        </div>
+      )}
     </div>
   );
 }

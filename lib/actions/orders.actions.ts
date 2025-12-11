@@ -299,6 +299,8 @@ export async function createOrder(data: OrderFormData & { id?: string; fabric_im
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {
+  // Import here to avoid circular dependency
+  const { createAppointment } = await import('./appointments.actions');
   const supabase = await createServerClient();
 
   const {

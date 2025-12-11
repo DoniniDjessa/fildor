@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Users } from 'lucide-react';
 import ClientCard from './ClientCard';
 import CreateClientForm from './CreateClientForm';
@@ -74,9 +74,46 @@ export default function ClientsGrid({ initialClients }: ClientsGridProps) {
     window.location.reload();
   };
 
-  // TODO: Get orders count and last measure date from database
-  // For now, using placeholder values
-  const getOrdersCount = (clientId: string) => 0;
+  // Get orders count for each client
+  const [ordersCounts, setOrdersCounts] = useState<Record<string, number>>({});
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  useEffect(() => {
+    loadOrdersCounts();
+  }, [clients]);
+
+  const loadOrdersCounts = async () => {
+    if (clients.length === 0) return;
+    
+    setLoadingOrders(true);
+    try {
+      const { getOrders } = await import('@/lib/actions/orders.actions');
+      const allOrders = await getOrders();
+      const counts: Record<string, number> = {};
+      
+      // Count orders per client
+      clients.forEach((client) => {
+        counts[client.id] = allOrders.filter((order) => order.client_id === client.id).length;
+      });
+      
+      setOrdersCounts(counts);
+    } catch (error) {
+      console.error('Error loading orders counts:', error);
+      // Set all to 0 on error
+      const counts: Record<string, number> = {};
+      clients.forEach((client) => {
+        counts[client.id] = 0;
+      });
+      setOrdersCounts(counts);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  const getOrdersCount = (clientId: string) => {
+    return ordersCounts[clientId] || 0;
+  };
+  
   const getLastMeasureDate = (clientId: string) => undefined;
 
   if (clients.length === 0) {

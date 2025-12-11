@@ -1,48 +1,46 @@
 'use client';
 
 import { CheckCircle, MapPin } from 'lucide-react';
-
-interface Appointment {
-  id: string;
-  type: 'fitting' | 'delivery' | 'measure';
-  time: string;
-  client_name: string;
-  outfit_desc: string;
-  location?: string;
-  completed: boolean;
-}
+import { Appointment } from '@/lib/actions/appointments.actions';
 
 interface AppointmentCardProps {
   appointment: Appointment;
   onToggleComplete: () => void;
 }
 
+const typeLabels: Record<string, string> = {
+  fitting: 'Essayage',
+  delivery: 'Livraison',
+  measure: 'Mesures',
+  discussion: 'Discussion',
+  other: 'Autre',
+};
+
 export default function AppointmentCard({ appointment, onToggleComplete }: AppointmentCardProps) {
-  const borderColors = {
+  const borderColors: Record<string, string> = {
     fitting: 'border-l-[#6C5DD3]',
     delivery: 'border-l-[#25D366]',
     measure: 'border-l-blue-400',
+    discussion: 'border-l-purple-400',
+    other: 'border-l-gray-400',
   };
 
-  const labels = {
-    fitting: 'Essayage',
-    delivery: 'Livraison',
-    measure: 'Mesures',
-  };
+  const isCompleted = appointment.status === 'completed';
+  const time = appointment.scheduled_time || '00:00';
 
   return (
     <div
       className={`bg-white dark:bg-[#1A1D29] rounded-2xl p-4 mb-3 border-l-[6px] shadow-sm flex items-center gap-4 transition-all ${
-        appointment.completed ? 'opacity-60' : ''
-      } ${borderColors[appointment.type]}`}
+        isCompleted ? 'opacity-60' : ''
+      } ${borderColors[appointment.type] || 'border-l-gray-400'}`}
     >
       {/* HEURE */}
       <div className="flex flex-col items-center min-w-[50px]">
         <span className="text-xl font-bold text-slate-700 dark:text-slate-300 font-mono">
-          {appointment.time}
+          {time.substring(0, 5)}
         </span>
         <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-medium">
-          {labels[appointment.type]}
+          {typeLabels[appointment.type] || appointment.type}
         </span>
       </div>
 
@@ -52,7 +50,7 @@ export default function AppointmentCard({ appointment, onToggleComplete }: Appoi
           {appointment.client_name}
         </h4>
         <p className="text-xs text-slate-500 dark:text-slate-400 italic mb-1">
-          {appointment.outfit_desc}
+          {appointment.order_desc || 'Commande'}
         </p>
 
         {/* Localisation (si livraison) */}
@@ -67,12 +65,12 @@ export default function AppointmentCard({ appointment, onToggleComplete }: Appoi
       <button
         onClick={onToggleComplete}
         className={`transition-colors ${
-          appointment.completed
+          isCompleted
             ? 'text-green-500 hover:text-green-600'
             : 'text-slate-300 dark:text-slate-600 hover:text-green-500'
         }`}
       >
-        <CheckCircle size={28} className={appointment.completed ? 'fill-current' : ''} />
+        <CheckCircle size={28} className={isCompleted ? 'fill-current' : ''} />
       </button>
     </div>
   );

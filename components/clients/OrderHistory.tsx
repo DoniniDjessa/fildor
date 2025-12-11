@@ -43,7 +43,7 @@ export default function OrderHistory({ clientId }: OrderHistoryProps) {
         Historique ({orders.length})
       </h3>
 
-      {/* Liste */}
+      {/* Liste - Only show last 3 orders */}
       <div className="flex-1 overflow-y-auto space-y-3">
         {loading ? (
           <div className="text-center py-4">
@@ -54,7 +54,7 @@ export default function OrderHistory({ clientId }: OrderHistoryProps) {
             <p className="text-[10px] text-[#808191] dark:text-gray-400">Aucune commande</p>
           </div>
         ) : (
-          orders.map((order) => {
+          orders.slice(0, 3).map((order) => {
             const modelName = order.model?.name || 'Modèle inconnu';
             const orderDate = order.created_at ? format(new Date(order.created_at), 'd MMM') : 'Date inconnue';
             const statusLabel = statusLabels[order.status] || order.status;

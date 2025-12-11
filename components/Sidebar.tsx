@@ -22,7 +22,8 @@ import {
   Bell,
   DollarSign,
   Receipt,
-  Calendar
+  Calendar,
+  TrendingUp
 } from 'lucide-react';
 import { signOut } from '@/lib/auth/actions';
 
@@ -103,6 +104,12 @@ const menuItems = [
     label: 'Notifications',
     href: '#',
     icon: Bell,
+    disabled: true,
+  },
+  {
+    label: 'Revenus',
+    href: '#',
+    icon: TrendingUp,
     disabled: true,
   },
   {
