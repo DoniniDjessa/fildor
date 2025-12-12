@@ -10,13 +10,17 @@ interface Appointment {
   avatar?: string;
 }
 
-const mockAppointments: Appointment[] = [
-  { id: '1', clientName: 'Mme Koffi', time: '14:00', type: 'Essayage Robe' },
-  { id: '2', clientName: 'M. Diallo', time: '16:30', type: 'Fitting Costume' },
-  { id: '3', clientName: 'Mme Traoré', time: '18:00', type: 'Essayage Robe' },
-];
+interface RecentClient {
+  id: string;
+  clientName: string;
+}
 
-export default function RightPanel() {
+interface RightPanelProps {
+  appointments: Appointment[];
+  recentClients: RecentClient[];
+}
+
+export default function RightPanel({ appointments, recentClients }: RightPanelProps) {
   return (
     <div className="w-full max-w-[300px] space-y-4">
       {/* Essayages & Rendez-vous */}
@@ -29,7 +33,8 @@ export default function RightPanel() {
         </div>
 
         <div className="space-y-2">
-          {mockAppointments.map((appointment) => (
+          {appointments.length > 0 ? (
+            appointments.map((appointment) => (
             <div
               key={appointment.id}
               className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-[15px] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -55,7 +60,12 @@ export default function RightPanel() {
                 </div>
               </div>
             </div>
-          ))}
+          ))
+          ) : (
+            <p className="font-poppins text-[#808191] dark:text-gray-400 text-[10px] text-center py-2">
+              Aucun essayage prévu
+            </p>
+          )}
         </div>
       </div>
 
@@ -69,19 +79,25 @@ export default function RightPanel() {
         </div>
 
         <div className="space-y-1.5">
-          {mockAppointments.slice(0, 3).map((appointment) => (
-            <div
-              key={appointment.id}
-              className="flex items-center gap-2 p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-[12px] transition-colors cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#6C5DD3] to-[#8B7AE8] flex items-center justify-center text-white text-[9px] font-semibold flex-shrink-0">
-                {appointment.clientName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+          {recentClients.length > 0 ? (
+            recentClients.map((client) => (
+              <div
+                key={client.id}
+                className="flex items-center gap-2 p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-[12px] transition-colors cursor-pointer"
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#6C5DD3] to-[#8B7AE8] flex items-center justify-center text-white text-[9px] font-semibold flex-shrink-0">
+                  {client.clientName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+                <p className="font-title text-[#11142D] dark:text-gray-100 text-[10px] truncate">
+                  {client.clientName}
+                </p>
               </div>
-              <p className="font-title text-[#11142D] dark:text-gray-100 text-[10px] truncate">
-                {appointment.clientName}
-              </p>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="font-poppins text-[#808191] dark:text-gray-400 text-[10px] text-center py-2">
+              Aucun client récent
+            </p>
+          )}
         </div>
       </div>
     </div>

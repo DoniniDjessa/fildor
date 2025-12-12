@@ -12,14 +12,24 @@ import { Order } from '@/lib/actions/orders.actions';
 import { DashboardStats } from '@/lib/actions/dashboard.actions';
 import { format } from 'date-fns';
 
+interface Client {
+  id: string;
+  noms?: string;
+  surnom?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface DashboardPageClientProps {
   initialOrders: Order[];
   initialStats: DashboardStats;
+  initialClients: Client[];
 }
 
 export default function DashboardPageClient({
   initialOrders,
   initialStats,
+  initialClients,
 }: DashboardPageClientProps) {
   const router = useRouter();
 
@@ -35,6 +45,54 @@ export default function DashboardPageClient({
   const activeOrders = initialOrders.filter(
     (order) => order.status !== 'completed'
   ).slice(0, 3);
+
+  // Extract fittings/appointments from orders (status='fitting' with delivery_date)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day
+  
+  const fittings = initialOrders
+    .filter((order) => {
+      if (order.status !== 'fitting' || !order.delivery_date || !order.client) {
+        return false;
+      }
+      // Only show upcoming fittings (today or future)
+      const deliveryDate = new Date(order.delivery_date);
+      deliveryDate.setHours(0, 0, 0, 0);
+      return deliveryDate >= today;
+    })
+    .map((order) => {
+      const clientName = order.client?.noms || order.client?.surnom || 'Client inconnu';
+      const deliveryDate = new Date(order.delivery_date);
+      const modelName = order.model?.name || 'Modèle';
+      
+      return {
+        id: order.id,
+        clientName,
+        time: format(deliveryDate, 'HH:mm'),
+        type: `Essayage ${modelName}`,
+        deliveryDate: deliveryDate.getTime(), // Store for sorting
+      };
+    })
+    .sort((a, b) => {
+      // Sort by date first, then by time
+      if (a.deliveryDate !== b.deliveryDate) {
+        return a.deliveryDate - b.deliveryDate;
+      }
+      // Same date, sort by time
+      const timeA = a.time.split(':').map(Number);
+      const timeB = b.time.split(':').map(Number);
+      const minutesA = timeA[0] * 60 + timeA[1];
+      const minutesB = timeB[0] * 60 + timeB[1];
+      return minutesA - minutesB;
+    })
+    .map(({ deliveryDate, ...appointment }) => appointment) // Remove deliveryDate from final object
+    .slice(0, 5); // Limit to 5 appointments
+
+  // Get recent clients (first 3)
+  const recentClients = initialClients.slice(0, 3).map((client) => ({
+    id: client.id,
+    clientName: client.noms || client.surnom || 'Client sans nom',
+  }));
 
   // Calculate progress based on status
   const getProgress = (status: string) => {
@@ -145,7 +203,7 @@ export default function DashboardPageClient({
 
         {/* Right Panel */}
         <div className="flex-shrink-0">
-          <RightPanel />
+          <RightPanel appointments={fittings} recentClients={recentClients} />
         </div>
       </div>
     </div>
