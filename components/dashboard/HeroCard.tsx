@@ -4,6 +4,28 @@ import { TrendingUp, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getDashboardStats, DashboardStats } from '@/lib/actions/dashboard.actions';
 
+function WaveChart() {
+  // Use consistent default heights for SSR to avoid hydration mismatch
+  const [heights, setHeights] = useState<number[]>(() => Array(12).fill(40));
+
+  useEffect(() => {
+    // Generate random heights only on client side after mount
+    setHeights(Array(12).fill(0).map(() => Math.random() * 60 + 20));
+  }, []);
+
+  return (
+    <div className="relative z-10 h-24 bg-white/10 backdrop-blur-sm rounded-[15px] p-3 border border-white/20 flex items-end justify-between gap-1">
+      {heights.map((height, i) => (
+        <div
+          key={i}
+          className="flex-1 bg-gradient-to-t from-white/40 to-white/20 rounded-t-[4px] transition-all hover:opacity-80"
+          style={{ height: `${height}%` }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function HeroCard() {
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -73,18 +95,7 @@ export default function HeroCard() {
       </div>
 
       {/* Wave Chart Placeholder */}
-      <div className="relative z-10 h-24 bg-white/10 backdrop-blur-sm rounded-[15px] p-3 border border-white/20 flex items-end justify-between gap-1">
-        {[...Array(12)].map((_, i) => {
-          const height = Math.random() * 60 + 20;
-          return (
-            <div
-              key={i}
-              className="flex-1 bg-gradient-to-t from-white/40 to-white/20 rounded-t-[4px] transition-all hover:opacity-80"
-              style={{ height: `${height}%` }}
-            />
-          );
-        })}
-      </div>
+      <WaveChart />
 
       {/* Trend indicator */}
       {stats && stats.ordersLastMonth > 0 && (
